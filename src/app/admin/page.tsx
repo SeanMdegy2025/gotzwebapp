@@ -93,7 +93,7 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      {/* Sticky Page Header - matches goweb */}
+      {/* Sticky Page Header - matches gowebsite */}
       <header className="sticky top-16 z-10 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div>
