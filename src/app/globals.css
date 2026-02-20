@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-safari-green: #1F3B2B;
+  --color-safari-green-light: #2D4A3A;
+  --color-safari-green-dark: #15241A;
+  --color-safari-gold: #D99A38;
+  --color-safari-gold-light: #E8B563;
+  --color-safari-gold-dark: #B8822A;
+  --color-safari-sand: #F4E9D7;
+  --color-safari-sand-light: #FAF5ED;
+  --color-safari-sand-dark: #E8DCC4;
+  --color-charcoal: #1A1A1A;
+  --color-charcoal-light: #2E2E2E;
+  --color-charcoal-lighter: #4A4A4A;
+  --color-charcoal-dark: #0F0F0F;
+  --shadow-medium: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  --shadow-glow-gold: 0 0 20px rgba(217, 154, 56, 0.3), 0 0 40px rgba(217, 154, 56, 0.1);
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-fade-in-up: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes loginCardIn { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes slideContentIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes backToTopIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes checkmark { 0% { stroke-dashoffset: 24; opacity: 0.5; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+
+@utility shadow-medium { box-shadow: var(--shadow-medium); }
+@utility shadow-glow-gold { box-shadow: var(--shadow-glow-gold); }
+@utility glass-dark { background-color: rgb(0 0 0 / 0.4); backdrop-filter: blur(12px); border: 1px solid rgb(255 255 255 / 0.1); }
+@utility font-heading { font-family: var(--font-heading); }
+@utility shadow-large { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+@utility animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+@utility animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+@utility animate-login-card { animation: loginCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@utility animate-slide-content-in { animation: slideContentIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@utility animate-back-to-top-in { animation: backToTopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@utility animate-shake { animation: shake 0.4s ease-in-out; }
+@utility animate-checkmark { animation: checkmark 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@utility noise-overlay {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.card-shine { position: relative; overflow: hidden; }
+.card-shine::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 0%, transparent 40%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 55%, transparent 60%, transparent 100%);
+  transform: translateX(-100%); transition: transform 0.7s ease; pointer-events: none; z-index: 1;
+}
+.card-shine:hover::after { transform: translateX(100%); }
+
+:root { --background: #ffffff; --foreground: #1A1A1A; }
+html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+body { background: var(--background); color: var(--foreground); font-family: var(--font-body); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
