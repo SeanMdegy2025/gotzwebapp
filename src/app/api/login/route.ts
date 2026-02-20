@@ -5,6 +5,7 @@ import { hasDb } from "@/lib/db/client";
 
 // Use Node runtime on Vercel so Neon + bcrypt work reliably (not Edge)
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@gotzportal.local";
