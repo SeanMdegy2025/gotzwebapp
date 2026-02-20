@@ -66,6 +66,9 @@ export type HeroSlide = {
   description?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  /** From API: base64 image data (with or without data: prefix) */
+  image_base64?: string;
+  /** Fallback / legacy */
   image?: string;
 };
 
