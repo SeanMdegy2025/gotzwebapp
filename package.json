@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "db:setup": "node scripts/db-setup.mjs",
     "db:seed-users": "node scripts/seed-users.mjs",
+    "db:reset-password": "node scripts/reset-password.mjs",
     "neon:setup": "node scripts/neon-setup.mjs",
     "neon:create": "node scripts/neon-create-and-setup.mjs"
   },

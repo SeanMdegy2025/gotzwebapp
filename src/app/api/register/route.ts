@@ -3,18 +3,29 @@ import { hash } from "bcryptjs";
 import { createUser, getUserByEmail } from "@/lib/db/queries";
 import { hasDb } from "@/lib/db/client";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
+  if (!hasDb()) {
+    return NextResponse.json(
+      { message: "Registration is not available." },
+      { status: 503 }
+    );
+  }
+  let body: unknown;
   try {
-    if (!hasDb()) {
-      return NextResponse.json(
-        { message: "Registration is not available." },
-        { status: 503 }
-      );
-    }
-    const body = await request.json();
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    const password = typeof body.password === "string" ? body.password : "";
-    const name = typeof body.name === "string" ? body.name.trim() : null;
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { message: "Invalid request body. Send JSON with email and password." },
+      { status: 400 }
+    );
+  }
+  const bodyObj = body as Record<string, unknown>;
+  try {
+    const email = typeof bodyObj.email === "string" ? bodyObj.email.trim().toLowerCase() : "";
+    const password = typeof bodyObj.password === "string" ? bodyObj.password : "";
+    const name = typeof bodyObj.name === "string" ? bodyObj.name.trim() : null;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -50,10 +61,11 @@ export async function POST(request: NextRequest) {
       message: "Account created.",
       user: { id: result.id, email, name: name || email },
     });
-  } catch {
+  } catch (err) {
+    console.error("[register]", err);
     return NextResponse.json(
-      { message: "Invalid request." },
-      { status: 400 }
+      { message: "Something went wrong. Try again or check server logs." },
+      { status: 500 }
     );
   }
 }
