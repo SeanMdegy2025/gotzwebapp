@@ -39,7 +39,8 @@ export function HeroCarousel() {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + displaySlides.length) % displaySlides.length);
 
   const getImageSrc = (slide: HeroSlide, index: number) => {
-    const src = toImageSrc(slide.image_base64 ?? slide.image);
+    const raw = slide.image_base64 ?? (slide as { imageBase64?: string }).imageBase64 ?? slide.image;
+    const src = toImageSrc(raw);
     if (src) return src;
     return STATIC_IMAGES[index % STATIC_IMAGES.length];
   };
