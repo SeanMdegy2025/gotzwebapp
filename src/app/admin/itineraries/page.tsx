@@ -7,6 +7,7 @@ import {
   getAdminItineraries,
   type Itinerary,
 } from "@/lib/auth";
+import { toImageSrc } from "@/lib/api";
 
 function formatPrice(n: number | null | undefined) {
   if (n == null) return "—";
@@ -102,9 +103,9 @@ export default function AdminItinerariesPage() {
                   <tr key={it.id} className="hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="h-16 w-24 overflow-hidden rounded-lg bg-gray-100">
-                        {it.image_base64 ? (
+                        {toImageSrc(it.image_base64) ? (
                           <img
-                            src={it.image_base64}
+                            src={toImageSrc(it.image_base64)!}
                             alt={it.title}
                             className="h-full w-full object-cover"
                           />

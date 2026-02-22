@@ -1,0 +1,12 @@
+# Vercel production env – copy this to Vercel Dashboard
+# Project → Settings → Environment Variables → Add (or paste into "Import .env")
+# Replace placeholder values with your real production values.
+
+# Required: Neon/Postgres connection string (Production)
+POSTGRES_URL=postgresql://user:password@host/dbname?sslmode=require
+
+# Required: Admin login password for production
+ADMIN_PASSWORD=your-secure-production-password
+
+# Production app URL (your Vercel URL or custom domain)
+NEXT_PUBLIC_APP_URL=https://your-project.vercel.app

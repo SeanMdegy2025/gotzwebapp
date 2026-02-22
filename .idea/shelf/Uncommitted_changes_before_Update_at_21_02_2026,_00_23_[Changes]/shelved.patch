@@ -1,0 +1,193 @@
+Index: .idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+--- /dev/null	(date 1771622547473)
++++ b/.idea/modules.xml	(date 1771622547473)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/gotzportal.iml" filepath="$PROJECT_DIR$/.idea/gotzportal.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1771622547475)
++++ b/.idea/vcs.xml	(date 1771622547475)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/.gitignore b/.idea/.gitignore
+new file mode 100644
+--- /dev/null	(date 1771622514217)
++++ b/.idea/.gitignore	(date 1771622514217)
+@@ -0,0 +1,10 @@
++# Default ignored files
++/shelf/
++/workspace.xml
++# Ignored default folder with query files
++/queries/
++# Datasource local storage ignored files
++/dataSources/
++/dataSources.local.xml
++# Editor-based HTTP Client requests
++/httpRequests/
+Index: .idea/inspectionProfiles/Project_Default.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/inspectionProfiles/Project_Default.xml b/.idea/inspectionProfiles/Project_Default.xml
+new file mode 100644
+--- /dev/null	(date 1771622547393)
++++ b/.idea/inspectionProfiles/Project_Default.xml	(date 1771622547393)
+@@ -0,0 +1,6 @@
++<component name="InspectionProjectProfileManager">
++  <profile version="1.0">
++    <option name="myName" value="Project Default" />
++    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
++  </profile>
++</component>
+\ No newline at end of file
+Index: .idea/gotzportal.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/gotzportal.iml b/.idea/gotzportal.iml
+new file mode 100644
+--- /dev/null	(date 1771622547472)
++++ b/.idea/gotzportal.iml	(date 1771622547472)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="WEB_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+Index: .env.example
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Database (Neon or any Postgres). Get from https://console.neon.tech\nPOSTGRES_URL=postgres://user:password@host/dbname?sslmode=require\n# Or use DATABASE_URL (same format)\n# DATABASE_URL=postgres://...\n\n# Admin login password (optional; if unset, dev token is used)\nADMIN_PASSWORD=your-secure-password\n\n# Public app URL (for redirects and API base). Vercel sets VERCEL_URL automatically.\n# Set this if you use a custom domain or need a fixed test URL.\nNEXT_PUBLIC_APP_URL=https://gotzportal.vercel.app\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.env.example b/.env.example
+--- a/.env.example	(revision 8d9263457e32edf7183af7a8ab8bece788a6f453)
++++ b/.env.example	(date 1771621952204)
+@@ -1,11 +1,34 @@
+-# Database (Neon or any Postgres). Get from https://console.neon.tech
++# =============================================================================
++# Gotzportal – all supported environment variables
++# Copy this file to .env.local and set your real values (never commit .env.local).
++# =============================================================================
++
++# ---- Database (Neon or any Postgres) ----
++# Get connection string from https://console.neon.tech
+ POSTGRES_URL=postgres://user:password@host/dbname?sslmode=require
+-# Or use DATABASE_URL (same format)
++# Alternative name (same format)
+ # DATABASE_URL=postgres://...
+ 
+-# Admin login password (optional; if unset, dev token is used)
++# ---- Admin login ----
++# Password for /login. Required in production; if unset, dev token is used.
+ ADMIN_PASSWORD=your-secure-password
++# Allowed email for legacy password login (optional; default: admin@gotzportal.local)
++# ADMIN_EMAIL=admin@gotzportal.local
++
++# ---- App URL ----
++# Used for redirects and API base URL. Vercel sets VERCEL_URL automatically.
++NEXT_PUBLIC_APP_URL=http://localhost:3000
++# Production example:
++# NEXT_PUBLIC_APP_URL=https://gotzportal.vercel.app
+ 
+-# Public app URL (for redirects and API base). Vercel sets VERCEL_URL automatically.
+-# Set this if you use a custom domain or need a fixed test URL.
+-NEXT_PUBLIC_APP_URL=https://gotzportal.vercel.app
++# ---- Seed script (npm run db:seed-users) ----
++# Password for the seeded admin user (defaults to ADMIN_PASSWORD if not set)
++# SEED_ADMIN_PASSWORD=your-secure-password
++# Email for the seeded user (default: admin@gotzportal.local)
++# SEED_ADMIN_EMAIL=admin@gotzportal.local
++# Display name for the seeded user (default: Admin)
++# SEED_ADMIN_NAME=Admin
++
++# ---- Neon project creation (optional; npm run neon:create) ----
++# NEON_API_KEY=your-neon-api-key
++# NEON_ORG_ID=your-org-id
+Index: STANDALONE.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/STANDALONE.md b/STANDALONE.md
+new file mode 100644
+--- /dev/null	(date 1771621972451)
++++ b/STANDALONE.md	(date 1771621972451)
+@@ -0,0 +1,40 @@
++# Gotzportal – standalone copy
++
++This folder is a standalone copy of the gotzportal app (moved out of `goweb`). You can run it on its own.
++
++## First-time setup
++
++```bash
++cd /Users/mdegy/gotzportal
++npm install
++```
++
++**Config:** A `.env.local` is already in place with defaults:
++
++- `ADMIN_PASSWORD=gotzportal-admin-2025` (change in production)
++- `NEXT_PUBLIC_APP_URL=http://localhost:3000`
++- `POSTGRES_URL=` — **add your Neon connection string** from [console.neon.tech](https://console.neon.tech) to use the database.
++
++All supported variables are listed in `.env.example`. Edit `.env.local` to match your setup.
++
++## Run the app
++
++```bash
++npm run dev
++```
++
++Then open **http://localhost:3000**.
++
++## Git / push
++
++This folder has its own git repo and is connected to:
++
++- **Remote:** `https://github.com/KekeEmmanuel/gotzportal.git`
++- **Branch:** `main`
++
++Use **Source Control** in Cursor (or `git add` / `git commit` / `git push`) from this folder to push changes.
++
++## Useful scripts
++
++- `npm run db:setup` – apply schema to Neon (needs `POSTGRES_URL` in `.env.local`)
++- `npm run db:seed-users` – seed admin user (uses `ADMIN_PASSWORD` from `.env.local`)
