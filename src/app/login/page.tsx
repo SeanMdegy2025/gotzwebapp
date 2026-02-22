@@ -65,7 +65,7 @@ function LoginForm() {
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
             <header className="mb-8 text-center">
               <h1 className="text-2xl font-heading font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] sm:text-3xl">Welcome back</h1>
-              <p className="mt-2 text-sm text-white/70">Sign in to your admin account · Go Tanzania Safari.yyutuftfyt</p>
+              <p className="mt-2 text-sm text-white/70">Sign in to your admin account · Go Tanzania Safari.</p>
               <div className="mx-auto mt-4 h-px w-16 bg-gradient-to-r from-transparent via-safari-gold to-transparent" />
             </header>
 
