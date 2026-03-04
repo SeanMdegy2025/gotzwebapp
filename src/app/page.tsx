@@ -4,6 +4,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContactForm } from "@/components/ContactForm";
 import { FeatureSection } from "@/components/FeatureSection";
 import { BackToTop } from "@/components/BackToTop";
+import { LinkWithLoading } from "@/components/LinkWithLoading";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { SectionDivider, SectionDividerMuted } from "@/components/SectionDivider";
 import {
@@ -267,24 +268,26 @@ export default async function Home() {
                     <h3 className="text-xl sm:text-2xl font-heading text-white mb-2 sm:mb-3 leading-tight">{pkg.title}</h3>
                     <p className="text-sm leading-relaxed text-white/75 line-clamp-3">{pkg.summary}</p>
                     <div className="mt-auto pt-6 border-t border-white/10">
-                      <Link
+                      <LinkWithLoading
                         href={pkg.linkTo === "itinerary" ? `/itineraries/${pkg.slug}` : `/tour-packages/${pkg.slug}`}
                         className="group flex items-center justify-center rounded-full border-2 border-white/40 bg-white/5 backdrop-blur-sm px-5 py-3 sm:px-6 sm:py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-safari-green min-h-[44px]"
+                        loadingLabel="Opening…"
                       >
                         View Details
                         <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </Link>
+                      </LinkWithLoading>
                     </div>
                   </div>
                 </article>
               ))}
             </div>
             <div className="text-center">
-              <Link
+              <LinkWithLoading
                 href={safariItems[0]?.linkTo === "itinerary" ? "/itineraries" : "/tour-packages"}
                 className="group relative overflow-hidden inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-safari-gold via-safari-gold/95 to-orange-500 px-6 py-4 sm:px-10 sm:py-5 text-sm sm:text-base font-bold text-charcoal shadow-lg transition-all duration-300 hover:from-safari-gold-light hover:via-safari-gold hover:to-orange-400 hover:shadow-2xl hover:shadow-safari-gold/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-safari-green min-h-[48px]"
+                loadingLabel="Loading…"
               >
                 <span className="relative z-10 flex items-center">
                   {safariItems[0]?.linkTo === "itinerary" ? "View All Itineraries" : "View All Packages"}
@@ -292,7 +295,7 @@ export default async function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
-              </Link>
+              </LinkWithLoading>
             </div>
           </div>
           </ScrollReveal>

@@ -127,7 +127,14 @@ export default function AdminDashboardPage() {
               href={card.route}
               className="group relative overflow-hidden rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md hover:ring-safari-green/20"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-3">
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center self-start rounded-xl bg-gradient-to-br shadow-lg ${card.color}`}
+                >
+                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={ICONS[card.icon]} />
+                  </svg>
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                     {card.title}
@@ -137,13 +144,6 @@ export default function AdminDashboardPage() {
                     <span className="font-semibold text-green-600">{card.active}</span>
                     <span className="text-gray-400"> active</span>
                   </p>
-                </div>
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg ${card.color}`}
-                >
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={ICONS[card.icon]} />
-                  </svg>
                 </div>
               </div>
               <div className="absolute inset-x-0 bottom-0 h-1 bg-gray-100">

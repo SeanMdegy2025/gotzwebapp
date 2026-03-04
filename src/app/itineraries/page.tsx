@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkWithLoading } from "@/components/LinkWithLoading";
 import { getItineraries, toImageSrc } from "@/lib/api";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -79,9 +80,10 @@ export default async function SafarisPage() {
                         {it.summary ?? ""}
                       </p>
                       <div className="mt-auto pt-6 border-t border-white/10">
-                        <Link
+                        <LinkWithLoading
                           href={`/itineraries/${it.slug}`}
                           className="group flex items-center justify-center rounded-full border-2 border-white/40 bg-white/5 backdrop-blur-sm px-5 py-3 sm:px-6 sm:py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-safari-green min-h-[44px]"
+                          loadingLabel="Opening…"
                         >
                           View Details
                           <svg
@@ -97,7 +99,7 @@ export default async function SafarisPage() {
                               d="M9 5l7 7-7 7"
                             />
                           </svg>
-                        </Link>
+                        </LinkWithLoading>
                       </div>
                     </div>
                   </article>

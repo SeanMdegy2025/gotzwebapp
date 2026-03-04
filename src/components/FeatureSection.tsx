@@ -118,7 +118,7 @@ export function FeatureSection() {
                 {hasCount ? (
                   <>
                     <p className="mt-6 sm:mt-8 text-4xl sm:text-5xl font-heading font-bold text-safari-green transition-transform duration-300 group-hover:scale-105">
-                      {travellerCount.toLocaleString()}<span className="text-2xl sm:text-3xl font-bold text-safari-gold">+</span>
+                      {travellerCount.toLocaleString("en-US")}<span className="text-2xl sm:text-3xl font-bold text-safari-gold">+</span>
                     </p>
                     <h3 className="mt-4 text-xl sm:text-2xl font-semibold tracking-tight text-charcoal">{feature.headline || feature.title}</h3>
                   </>
