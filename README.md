@@ -27,4 +27,13 @@ Open [http://localhost:3000](http://localhost:3000).
 - `src/lib/db/` – Postgres layer (schema + client + queries). **The DB server is external**; only schema and connection code live in the repo. Set `POSTGRES_URL` or `DATABASE_URL` to use it.
 - `src/lib/data/` – Fallbacks and in-memory store when no DB is configured
 
+## Production (Vercel)
+
+For the live site to show **Safaris, Itineraries, and other content from the database** (instead of default/fallback content), set in Vercel:
+
+- **Environment variables** (Project → Settings → Environment Variables):
+  - `POSTGRES_URL` or `DATABASE_URL` – your Postgres connection string (e.g. Neon, Vercel Postgres).
+
+Apply to **Production** (and Preview if you want). Redeploy after adding or changing these variables.
+
 See **[MIGRATION.md](./MIGRATION.md)** for step-by-step migration from Laravel and Vercel deployment.

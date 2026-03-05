@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LinkWithLoading } from "@/components/LinkWithLoading";
-import { getItineraries, toImageSrc } from "@/lib/api";
+import { toImageSrc } from "@/lib/api";
+import { getItineraries } from "@/lib/db/queries";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export const metadata = {

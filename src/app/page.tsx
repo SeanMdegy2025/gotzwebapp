@@ -7,17 +7,17 @@ import { BackToTop } from "@/components/BackToTop";
 import { LinkWithLoading } from "@/components/LinkWithLoading";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { SectionDivider, SectionDividerMuted } from "@/components/SectionDivider";
+import { toImageSrc } from "@/lib/api";
 import {
   getAboutStats,
   getAboutHighlights,
-  getItineraries,
-  getDestinations,
-  getLodges,
   getContactChannels,
   getContactQuickFacts,
+  getDestinations,
+  getItineraries,
+  getLodges,
   getTourPackages,
-  toImageSrc,
-} from "@/lib/api";
+} from "@/lib/db/queries";
 
 const FALLBACK_STATS = [
   { value: "18+", label: "Years curating luxury safaris" },
@@ -69,7 +69,7 @@ export default async function Home() {
       getLodges(),
       getContactChannels(),
       getContactQuickFacts(),
-      getTourPackages(),
+      getTourPackages(50),
     ]);
     if (stats.length > 0) aboutStats = stats;
     if (highlights.length > 0) aboutHighlights = highlights;
