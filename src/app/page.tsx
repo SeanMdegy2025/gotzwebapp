@@ -87,7 +87,8 @@ export default async function Home() {
       }));
     } else if (tourPackages.length > 0) {
       safariItems = tourPackages.slice(0, 6).map((p) => {
-        const img = p.hero_image?.cover || p.hero_image?.url || (p.images?.[0] as string) || "/images/safari/wildlife-zebra.jpg";
+        const hero = p.hero_image as { cover?: string; url?: string } | null | undefined;
+        const img = hero?.cover || hero?.url || (p.images?.[0] as string) || "/images/safari/wildlife-zebra.jpg";
         return {
           slug: p.slug,
           title: p.title,
