@@ -32,6 +32,7 @@
 @utility shadow-glow-gold { box-shadow: var(--shadow-glow-gold); }
 @utility glass-dark { background-color: rgb(0 0 0 / 0.4); backdrop-filter: blur(12px); border: 1px solid rgb(255 255 255 / 0.1); }
 @utility font-heading { font-family: var(--font-heading); }
+@utility font-hero { font-family: var(--font-hero); }
 @utility shadow-large { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
 @utility animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
 @utility animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }

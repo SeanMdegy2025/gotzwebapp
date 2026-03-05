@@ -79,18 +79,18 @@ export function HeroCarousel() {
         <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col justify-end px-5 sm:px-6 md:px-8 xl:pl-12 pb-24 sm:pb-20 pt-20 sm:pt-16 text-white translate-x-0 xl:-translate-x-24">
           <div className="max-w-xl w-full min-w-0">
             {activeSlide.label && (
-              <p className="mb-3 sm:mb-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] sm:tracking-[0.5em] text-safari-gold animate-slide-content-in [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">{activeSlide.label}</p>
+              <p className="mb-3 sm:mb-5 text-[11px] sm:text-xs font-medium uppercase tracking-[0.4em] sm:tracking-[0.55em] text-safari-gold/95 animate-slide-content-in [text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">{activeSlide.label}</p>
             )}
-            <h1 className="mt-2 text-2xl font-heading font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl text-balance animate-slide-content-in [text-shadow:0_2px_8px_rgba(0,0,0,0.6)]" style={{ animationDelay: "0.05s" }}>{activeSlide.title}</h1>
+            <h1 className="mt-1 font-hero text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white text-balance animate-slide-content-in [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_40px_rgba(0,0,0,0.2)]" style={{ animationDelay: "0.05s" }}>{activeSlide.title}</h1>
             {activeSlide.description && (
-              <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm md:text-base leading-snug text-white/95 animate-slide-content-in [text-shadow:0_1px_4px_rgba(0,0,0,0.5)]" style={{ animationDelay: "0.1s" }}>{activeSlide.description}</p>
+              <p className="mt-4 sm:mt-5 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-white/90 animate-slide-content-in [text-shadow:0_1px_4px_rgba(0,0,0,0.5)]" style={{ animationDelay: "0.1s" }}>{activeSlide.description}</p>
             )}
           </div>
-          <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4 animate-slide-content-in" style={{ animationDelay: "0.15s" }}>
+          <div className="mt-7 sm:mt-9 flex flex-wrap gap-3 sm:gap-4 animate-slide-content-in" style={{ animationDelay: "0.15s" }}>
             {activeSlide.ctaLabel && activeSlide.ctaHref && (
-              <Link href={activeSlide.ctaHref} className="group rounded-full bg-safari-gold px-6 py-3.5 sm:px-8 sm:py-4 text-sm font-semibold text-charcoal transition-all duration-300 hover:bg-safari-gold-light hover:shadow-glow-gold hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-black/50 min-h-[44px] inline-flex items-center">
+              <Link href={activeSlide.ctaHref} className="group rounded-full bg-safari-gold px-7 py-3.5 sm:px-9 sm:py-4 text-sm font-semibold tracking-wide text-charcoal transition-all duration-300 hover:bg-safari-gold-light hover:shadow-glow-gold hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-black/50 min-h-[48px] inline-flex items-center">
                 {activeSlide.ctaLabel}
-                <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                <span className="ml-2.5 inline-block text-[1.1em] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden>→</span>
               </Link>
             )}
           </div>
