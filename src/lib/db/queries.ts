@@ -73,6 +73,7 @@ export async function getTourPackageIdBySlug(slug: string): Promise<number | nul
 
 export async function insertBooking(data: {
   tour_package_id: number | null;
+  itinerary_id: number | null;
   full_name: string;
   email: string;
   phone: string;
@@ -84,7 +85,26 @@ export async function insertBooking(data: {
 }): Promise<{ id: number } | null> {
   const sql = getDb();
   if (!sql) return null;
-  const rows = await sql`
+  const insertWithItinerary = () => sql`
+    INSERT INTO bookings (
+      tour_package_id, itinerary_id, full_name, email, phone, whatsapp,
+      travel_date, number_of_travelers, customization_data, special_requests
+    )
+    VALUES (
+      ${data.tour_package_id},
+      ${data.itinerary_id},
+      ${data.full_name},
+      ${data.email},
+      ${data.phone},
+      ${data.whatsapp},
+      ${data.travel_date ? data.travel_date : null},
+      ${data.number_of_travelers},
+      ${data.customization_data ? JSON.stringify(data.customization_data) : null},
+      ${data.special_requests}
+    )
+    RETURNING id
+  `;
+  const insertWithoutItinerary = () => sql`
     INSERT INTO bookings (
       tour_package_id, full_name, email, phone, whatsapp,
       travel_date, number_of_travelers, customization_data, special_requests
@@ -102,42 +122,80 @@ export async function insertBooking(data: {
     )
     RETURNING id
   `;
-  const row = Array.isArray(rows) ? rows[0] : (rows as unknown as { id: number }[])?.[0];
-  return row ? { id: Number((row as { id: number }).id) } : null;
+  try {
+    const rows = await insertWithItinerary();
+    const row = Array.isArray(rows) ? rows[0] : (rows as unknown as { id: number }[])?.[0];
+    return row ? { id: Number((row as { id: number }).id) } : null;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("itinerary_id") && msg.includes("does not exist")) {
+      const rows = await insertWithoutItinerary();
+      const row = Array.isArray(rows) ? rows[0] : (rows as unknown as { id: number }[])?.[0];
+      return row ? { id: Number((row as { id: number }).id) } : null;
+    }
+    throw err;
+  }
 }
 
 // ---- Admin: bookings ----
 export async function adminListBookings(status?: string): Promise<Array<Record<string, unknown>>> {
   const sql = getDb();
   if (!sql) return [];
-  const rows = status && status !== "all"
-    ? await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL WHERE b.status = ${status} ORDER BY b.created_at DESC`
-    : await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL ORDER BY b.created_at DESC`;
-  return (rows as Array<Record<string, unknown>>).map((r) => {
+  const mapRowWithItinerary = (r: Record<string, unknown>) => {
+    const { tp_title, tp_slug, itinerary_title, itinerary_slug, ...rest } = r;
+    return {
+      ...rest,
+      tour_package: r.tour_package_id ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" } : null,
+      itinerary: r.itinerary_id ? { id: r.itinerary_id, title: itinerary_title ?? "—", slug: itinerary_slug ?? "" } : null,
+    };
+  };
+  const mapRowWithoutItinerary = (r: Record<string, unknown>) => {
     const { tp_title, tp_slug, ...rest } = r;
     return {
       ...rest,
-      tour_package: r.tour_package_id
-        ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" }
-        : null,
+      tour_package: r.tour_package_id ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" } : null,
+      itinerary: null as { id: number; title: string; slug: string } | null,
     };
-  });
+  };
+  try {
+    const rows = status && status !== "all"
+      ? await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug, i.title AS itinerary_title, i.slug AS itinerary_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL LEFT JOIN itineraries i ON b.itinerary_id = i.id AND i.deleted_at IS NULL WHERE b.status = ${status} ORDER BY b.created_at DESC`
+      : await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug, i.title AS itinerary_title, i.slug AS itinerary_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL LEFT JOIN itineraries i ON b.itinerary_id = i.id AND i.deleted_at IS NULL ORDER BY b.created_at DESC`;
+    return (rows as Array<Record<string, unknown>>).map(mapRowWithItinerary);
+  } catch {
+    const rows = status && status !== "all"
+      ? await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL WHERE b.status = ${status} ORDER BY b.created_at DESC`
+      : await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL ORDER BY b.created_at DESC`;
+    return (rows as Array<Record<string, unknown>>).map(mapRowWithoutItinerary);
+  }
 }
 
 export async function adminGetBooking(id: number): Promise<Record<string, unknown> | null> {
   const sql = getDb();
   if (!sql) return null;
-  const rows = await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL WHERE b.id = ${id}`;
-  const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
-  if (!row) return null;
-  const r = row as Record<string, unknown>;
-  const { tp_title, tp_slug, ...rest } = r;
-  return {
-    ...rest,
-    tour_package: r.tour_package_id
-      ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" }
-      : null,
-  };
+  try {
+    const rows = await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug, i.title AS itinerary_title, i.slug AS itinerary_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL LEFT JOIN itineraries i ON b.itinerary_id = i.id AND i.deleted_at IS NULL WHERE b.id = ${id}`;
+    const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
+    if (!row) return null;
+    const r = row as Record<string, unknown>;
+    const { tp_title, tp_slug, itinerary_title, itinerary_slug, ...rest } = r;
+    return {
+      ...rest,
+      tour_package: r.tour_package_id ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" } : null,
+      itinerary: r.itinerary_id ? { id: r.itinerary_id, title: itinerary_title ?? "—", slug: itinerary_slug ?? "" } : null,
+    };
+  } catch {
+    const rows = await sql`SELECT b.*, tp.title AS tp_title, tp.slug AS tp_slug FROM bookings b LEFT JOIN tour_packages tp ON b.tour_package_id = tp.id AND tp.deleted_at IS NULL WHERE b.id = ${id}`;
+    const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
+    if (!row) return null;
+    const r = row as Record<string, unknown>;
+    const { tp_title, tp_slug, ...rest } = r;
+    return {
+      ...rest,
+      tour_package: r.tour_package_id ? { id: r.tour_package_id, title: tp_title ?? "—", slug: tp_slug ?? "" } : null,
+      itinerary: null,
+    };
+  }
 }
 
 export async function adminUpdateBooking(id: number, data: { admin_notes?: string; status?: string }): Promise<boolean> {
@@ -405,16 +463,24 @@ export async function getTourPackageBySlug(slug: string): Promise<{
   };
 }
 
-export async function getItineraryBySlug(slug: string): Promise<{ id: number; slug: string; title: string; summary?: string; badge?: string; image_base64?: string; duration_days?: number; price_from?: number | null } | null> {
-  const sql = getDb();
-  if (!sql) return null;
-  const rows = await sql`
-    SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from
-    FROM itineraries WHERE slug = ${slug} AND deleted_at IS NULL
-  `;
-  const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
-  if (!row) return null;
-  const r = row as Record<string, unknown>;
+export type ItineraryDetailRow = {
+  id: number;
+  slug: string;
+  title: string;
+  summary?: string;
+  badge?: string;
+  image_base64?: string;
+  duration_days?: number;
+  price_from?: number | null;
+  description?: string;
+  highlights?: string[];
+  inclusions?: string[];
+  exclusions?: string[];
+  days?: Array<{ day_number: number; title?: string; description?: string; accommodation?: string; meals?: string }>;
+};
+
+function mapItineraryRow(r: Record<string, unknown>): ItineraryDetailRow {
+  const parseJson = (v: unknown): unknown => (v == null ? undefined : typeof v === "string" ? (() => { try { return JSON.parse(v); } catch { return undefined; } })() : v);
   return {
     id: Number(r.id),
     slug: String(r.slug),
@@ -424,7 +490,55 @@ export async function getItineraryBySlug(slug: string): Promise<{ id: number; sl
     image_base64: r.image_base64 != null ? String(r.image_base64) : undefined,
     duration_days: r.duration_days != null ? Number(r.duration_days) : undefined,
     price_from: r.price_from != null ? Number(r.price_from) : null,
+    description: r.description != null ? String(r.description) : undefined,
+    highlights: parseJson(r.highlights) as string[] | undefined,
+    inclusions: parseJson(r.inclusions) as string[] | undefined,
+    exclusions: parseJson(r.exclusions) as string[] | undefined,
+    days: parseJson(r.days) as ItineraryDetailRow["days"],
   };
+}
+
+export async function getItineraryBySlug(slug: string): Promise<ItineraryDetailRow | null> {
+  const sql = getDb();
+  if (!sql) return null;
+  try {
+    const rows = await sql`
+      SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from, description, highlights, inclusions, exclusions, days
+      FROM itineraries WHERE slug = ${slug} AND deleted_at IS NULL
+    `;
+    const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
+    if (!row) return null;
+    return mapItineraryRow(row as Record<string, unknown>);
+  } catch {
+    try {
+      const rows = await sql`
+        SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from
+        FROM itineraries WHERE slug = ${slug} AND deleted_at IS NULL
+      `;
+      const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
+      if (!row) return null;
+      return mapItineraryRow(row as Record<string, unknown>);
+    } catch {
+      return null;
+    }
+  }
+}
+
+export async function getItineraryImages(itineraryId: number): Promise<Array<{ id: number; image_base64: string; display_order: number }>> {
+  const sql = getDb();
+  if (!sql) return [];
+  try {
+    const rows = await sql`
+      SELECT id, image_base64, display_order FROM itinerary_images WHERE itinerary_id = ${itineraryId} ORDER BY display_order ASC, id ASC
+    `;
+    return ((Array.isArray(rows) ? rows : []) as Array<Record<string, unknown>>).map((r) => ({
+      id: Number(r.id),
+      image_base64: r.image_base64 != null ? String(r.image_base64) : "",
+      display_order: Number(r.display_order ?? 0),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function getLodgeBySlug(slug: string): Promise<{ id: number; name: string; slug: string; location?: string; mood?: string; short_description?: string; image_base64?: string; price_from?: number | null } | null> {
@@ -894,9 +1008,13 @@ export async function adminCreateItinerary(data: Record<string, unknown>): Promi
   const sql = getDb();
   if (!sql) return null;
   const slug = (data.slug as string) || String(data.title).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const highlights = data.highlights != null && Array.isArray(data.highlights) ? JSON.stringify(data.highlights) : null;
+  const inclusions = data.inclusions != null && Array.isArray(data.inclusions) ? JSON.stringify(data.inclusions) : null;
+  const exclusions = data.exclusions != null && Array.isArray(data.exclusions) ? JSON.stringify(data.exclusions) : null;
+  const days = data.days != null && Array.isArray(data.days) ? JSON.stringify(data.days) : null;
   const rows = await sql`
-    INSERT INTO itineraries (slug, title, summary, badge, image_base64, duration_days, price_from, difficulty, display_order, is_active)
-    VALUES (${slug}, ${String(data.title)}, ${data.summary != null ? String(data.summary) : null}, ${data.badge != null ? String(data.badge) : null}, ${data.image_base64 != null ? String(data.image_base64) : null}, ${data.duration_days != null ? Number(data.duration_days) : null}, ${data.price_from != null ? Number(data.price_from) : null}, ${data.difficulty != null ? String(data.difficulty) : null}, ${Number(data.display_order ?? 0)}, ${Boolean(data.is_active !== false)})
+    INSERT INTO itineraries (slug, title, summary, description, badge, image_base64, duration_days, price_from, difficulty, highlights, inclusions, exclusions, days, display_order, is_active)
+    VALUES (${slug}, ${String(data.title)}, ${data.summary != null ? String(data.summary) : null}, ${data.description != null ? String(data.description) : null}, ${data.badge != null ? String(data.badge) : null}, ${data.image_base64 != null ? String(data.image_base64) : null}, ${data.duration_days != null ? Number(data.duration_days) : null}, ${data.price_from != null ? Number(data.price_from) : null}, ${data.difficulty != null ? String(data.difficulty) : null}, ${highlights}, ${inclusions}, ${exclusions}, ${days}, ${Number(data.display_order ?? 0)}, ${Boolean(data.is_active !== false)})
     RETURNING id
   `;
   const row = one<{ id: number }>(rows);
@@ -906,7 +1024,7 @@ export async function adminCreateItinerary(data: Record<string, unknown>): Promi
 export async function adminUpdateItinerary(id: number, data: Record<string, unknown>): Promise<boolean> {
   const sql = getDb();
   if (!sql) return false;
-  const allowed = ["slug", "title", "summary", "badge", "image_base64", "duration_days", "price_from", "difficulty", "display_order", "is_active"];
+  const allowed = ["slug", "title", "summary", "description", "badge", "image_base64", "duration_days", "price_from", "difficulty", "highlights", "inclusions", "exclusions", "days", "display_order", "is_active"];
   const updates: string[] = [];
   const vals: unknown[] = [];
   let i = 0;
@@ -917,6 +1035,7 @@ export async function adminUpdateItinerary(id: number, data: Record<string, unkn
     if (k === "duration_days" || k === "display_order") vals.push(Number(data[k]));
     else if (k === "price_from") vals.push(data[k] != null ? Number(data[k]) : null);
     else if (k === "is_active") vals.push(Boolean(data[k]));
+    else if (k === "highlights" || k === "inclusions" || k === "exclusions" || k === "days") vals.push(data[k] != null && (Array.isArray(data[k]) || typeof data[k] === "object") ? JSON.stringify(data[k]) : null);
     else vals.push(data[k] != null ? String(data[k]) : null);
   }
   if (updates.length === 0) return true;
@@ -926,6 +1045,18 @@ export async function adminUpdateItinerary(id: number, data: Record<string, unkn
     vals
   );
   return true;
+}
+
+export async function adminSetItineraryImages(itineraryId: number, images: Array<{ image_base64: string }>): Promise<void> {
+  const sql = getDb();
+  if (!sql) return;
+  await sql`DELETE FROM itinerary_images WHERE itinerary_id = ${itineraryId}`;
+  for (let i = 0; i < images.length; i++) {
+    await sql`
+      INSERT INTO itinerary_images (itinerary_id, image_base64, display_order)
+      VALUES (${itineraryId}, ${images[i].image_base64}, ${i})
+    `;
+  }
 }
 
 export async function adminDeleteItinerary(id: number): Promise<boolean> {

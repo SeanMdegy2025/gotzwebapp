@@ -47,24 +47,6 @@ CREATE TABLE IF NOT EXISTS tour_packages (
   deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS bookings (
-  id SERIAL PRIMARY KEY,
-  tour_package_id INT REFERENCES tour_packages(id) ON DELETE SET NULL,
-  full_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  phone VARCHAR(255) NOT NULL,
-  whatsapp VARCHAR(255),
-  travel_date DATE,
-  number_of_travelers SMALLINT NOT NULL DEFAULT 1,
-  customization_data JSONB,
-  special_requests TEXT,
-  status VARCHAR(32) DEFAULT 'pending',
-  admin_notes TEXT,
-  completed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Content tables (read by API)
 CREATE TABLE IF NOT EXISTS hero_slides (
   id SERIAL PRIMARY KEY,
@@ -148,16 +130,49 @@ CREATE TABLE IF NOT EXISTS itineraries (
   slug VARCHAR(255) UNIQUE NOT NULL,
   title VARCHAR(255) NOT NULL,
   summary TEXT,
+  description TEXT,
   badge VARCHAR(64),
   image_base64 TEXT,
   duration_days SMALLINT,
   price_from DECIMAL(10,2),
   difficulty VARCHAR(64),
+  highlights JSONB,
+  inclusions JSONB,
+  exclusions JSONB,
+  days JSONB,
   display_order INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS itinerary_images (
+  id SERIAL PRIMARY KEY,
+  itinerary_id INT NOT NULL REFERENCES itineraries(id) ON DELETE CASCADE,
+  image_base64 TEXT NOT NULL,
+  display_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_itinerary_images_itinerary_id ON itinerary_images(itinerary_id);
+
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  tour_package_id INT REFERENCES tour_packages(id) ON DELETE SET NULL,
+  itinerary_id INT REFERENCES itineraries(id) ON DELETE SET NULL,
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(255) NOT NULL,
+  whatsapp VARCHAR(255),
+  travel_date DATE,
+  number_of_travelers SMALLINT NOT NULL DEFAULT 1,
+  customization_data JSONB,
+  special_requests TEXT,
+  status VARCHAR(32) DEFAULT 'pending',
+  admin_notes TEXT,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS destinations (

@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasDb } from "@/lib/db/client";
-import { getTourPackageIdBySlug as getTourPackageIdBySlugDb, insertBooking } from "@/lib/db/queries";
+import { getTourPackageIdBySlug as getTourPackageIdBySlugDb, getItineraryBySlug, insertBooking } from "@/lib/db/queries";
 import { createBooking, getTourPackageIdBySlug } from "@/lib/data/store";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const tour_package_id = body.tour_package_id != null ? Number(body.tour_package_id) : undefined;
+    const itinerary_id = body.itinerary_id != null ? Number(body.itinerary_id) : undefined;
     const package_slug = typeof body.package_slug === "string" ? body.package_slug.trim() : undefined;
+    const itinerary_slug = typeof body.itinerary_slug === "string" ? body.itinerary_slug.trim() : undefined;
     const full_name = typeof body.full_name === "string" ? body.full_name.trim() : "";
     const email = typeof body.email === "string" ? body.email.trim() : "";
     const phone = typeof body.phone === "string" ? body.phone.trim() : "";
@@ -38,7 +40,6 @@ export async function POST(request: NextRequest) {
         resolvedTourPackageId = getTourPackageIdBySlug(package_slug);
       }
     }
-    // Allow booking without a package (inquiry)
     if (resolvedTourPackageId == null && (tour_package_id != null || package_slug)) {
       return NextResponse.json(
         { message: "The selected tour package could not be found." },
@@ -46,8 +47,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let resolvedItineraryId: number | null = itinerary_id ?? null;
+    if (resolvedItineraryId == null && itinerary_slug && hasDb()) {
+      const it = await getItineraryBySlug(itinerary_slug);
+      if (it) resolvedItineraryId = it.id;
+    }
+    if (resolvedItineraryId == null && (itinerary_id != null || itinerary_slug)) {
+      return NextResponse.json(
+        { message: "The selected safari could not be found." },
+        { status: 422 }
+      );
+    }
+
     const payload = {
       tour_package_id: resolvedTourPackageId,
+      itinerary_id: resolvedItineraryId,
       full_name,
       email,
       phone,

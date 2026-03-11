@@ -147,13 +147,31 @@ export default function AdminBookingDetailPage() {
       <div className="grid grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-3 sm:px-6 lg:px-8">
         {/* Main Content */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Package Information */}
+          {/* Package / Safari Information */}
           <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
             <div className="border-b border-gray-200 px-6 py-4">
-              <h3 className="text-lg font-semibold text-gray-900">Package Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Package / Safari</h3>
             </div>
             <div className="px-6 py-4">
-              {booking.tour_package ? (
+              {booking.itinerary ? (
+                <>
+                  <p className="text-lg font-semibold text-gray-900">Safari: {booking.itinerary.title}</p>
+                  <Link
+                    href={`/itineraries/${booking.itinerary.slug}`}
+                    className="mt-2 inline-block text-sm text-safari-green hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View safari details →
+                  </Link>
+                  <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Travelers:</span>
+                      <span className="ml-2 text-gray-600">{booking.number_of_travelers}</span>
+                    </div>
+                  </div>
+                </>
+              ) : booking.tour_package && booking.tour_package.title && booking.tour_package.title !== "—" ? (
                 <>
                   <p className="text-lg font-semibold text-gray-900">{booking.tour_package.title}</p>
                   <div className="mt-4 flex flex-wrap gap-4 text-sm">
@@ -164,7 +182,7 @@ export default function AdminBookingDetailPage() {
                   </div>
                 </>
               ) : (
-                <p className="italic text-gray-400">Package has been deleted</p>
+                <p className="text-gray-500">Safari or package booking — link not stored for this booking. New bookings from a safari page will show the safari name here.</p>
               )}
             </div>
           </div>

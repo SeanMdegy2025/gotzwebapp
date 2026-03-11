@@ -17,6 +17,7 @@ export type ContactMessage = {
 export type Booking = {
   id: number;
   tour_package_id: number | null;
+  itinerary_id: number | null;
   full_name: string;
   email: string;
   phone: string;

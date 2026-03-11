@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasDb } from "@/lib/db/client";
-import { getItineraryBySlug } from "@/lib/db/queries";
+import { getItineraryBySlug, getItineraryImages } from "@/lib/db/queries";
 import { fallbackItineraries } from "@/lib/data/fallbacks";
 
 export async function GET(
@@ -12,7 +12,8 @@ export async function GET(
     try {
       const item = await getItineraryBySlug(slug);
       if (item) {
-        return NextResponse.json({ data: { ...item, highlights: [], inclusions: [], exclusions: [], days: [] } });
+        const images = await getItineraryImages(item.id);
+        return NextResponse.json({ data: { ...item, images } });
       }
     } catch {}
   }
@@ -20,5 +21,5 @@ export async function GET(
   if (!item) {
     return NextResponse.json({ message: "Itinerary not found." }, { status: 404 });
   }
-  return NextResponse.json({ data: { ...item, highlights: [], inclusions: [], exclusions: [], days: [] } });
+  return NextResponse.json({ data: { ...item, highlights: [], inclusions: [], exclusions: [], days: [], images: [] } });
 }

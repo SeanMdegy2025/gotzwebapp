@@ -17,6 +17,7 @@ function mapBooking(r: Record<string, unknown>) {
     created_at: String(r.created_at),
     updated_at: r.updated_at != null ? String(r.updated_at) : undefined,
     tour_package: r.tour_package ?? (r.tour_package_id ? { id: r.tour_package_id, title: "—", slug: "" } : null),
+    itinerary: r.itinerary ?? (r.itinerary_id ? { id: r.itinerary_id, title: "—", slug: "" } : null),
     customization_data: r.customization_data,
     special_requests: r.special_requests,
     admin_notes: r.admin_notes,
@@ -52,6 +53,7 @@ export async function GET(
     booking: {
       ...booking,
       tour_package: booking.tour_package_id ? { id: booking.tour_package_id, title: "—", slug: "" } : null,
+      itinerary: booking.itinerary_id ? { id: booking.itinerary_id, title: "—", slug: "" } : null,
     },
   });
 }
@@ -86,6 +88,7 @@ export async function PATCH(
     booking: {
       ...updated,
       tour_package: updated.tour_package_id ? { id: updated.tour_package_id, title: "—", slug: "" } : null,
+      itinerary: updated.itinerary_id ? { id: updated.itinerary_id, title: "—", slug: "" } : null,
     },
   });
 }

@@ -110,7 +110,7 @@ export default function AdminBookingsPage() {
                   Booking ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  Package
+                  Package / Safari
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Customer
@@ -139,10 +139,17 @@ export default function AdminBookingsPage() {
                     #{b.id}
                   </td>
                   <td className="px-6 py-4">
-                    {b.tour_package ? (
+                    {b.itinerary ? (
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">Safari: {b.itinerary.title}</div>
+                        <Link href={`/itineraries/${b.itinerary.slug}`} className="text-xs text-safari-green hover:underline" target="_blank" rel="noopener noreferrer">
+                          View safari →
+                        </Link>
+                      </div>
+                    ) : b.tour_package && b.tour_package.title && b.tour_package.title !== "—" ? (
                       <div className="text-sm font-medium text-gray-900">{b.tour_package.title}</div>
                     ) : (
-                      <div className="text-sm text-gray-400">Package deleted</div>
+                      <div className="text-sm text-gray-500">Safari / package booking</div>
                     )}
                   </td>
                   <td className="px-6 py-4">
