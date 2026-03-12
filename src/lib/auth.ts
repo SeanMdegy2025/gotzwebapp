@@ -177,6 +177,8 @@ export type AboutHighlight = { id: number; title: string; copy: string; display_
 export type ItineraryDay = { id?: number; day_number: number; title?: string; description?: string; accommodation?: string; meals?: string };
 export type ItineraryImage = { id: number; image_base64: string; display_order: number };
 export type Itinerary = { id: number; title: string; slug: string; summary?: string; description?: string; badge?: string; image_base64?: string | null; duration_days: number; price_from?: number; difficulty?: string; highlights?: string[]; inclusions?: string[]; exclusions?: string[]; days: ItineraryDay[]; display_order: number; is_featured: boolean; published_at?: string; created_at: string; updated_at: string; images?: ItineraryImage[] };
+/** Payload for creating an itinerary; images need only image_base64 (id/display_order set server-side). */
+export type CreateItineraryInput = Omit<Partial<Itinerary>, "images"> & { title: string; duration_days: number; images?: Array<{ image_base64: string }> };
 export type AdminTourPackage = { id: number; slug: string; title: string; short_description?: string; description?: string; price_from?: number; duration_days?: number; max_participants?: number; is_featured: boolean; display_order: number; created_at: string; updated_at: string };
 export type AdminDestination = { id: number; name: string; slug: string; region?: string; teaser?: string; tag?: string; description?: string; image_base64?: string; map_embed_url?: string; display_order: number; is_featured: boolean; published_at?: string; created_at: string; updated_at: string; images?: Array<{ image_base64: string }> };
 export type AdminLodge = { id: number; name: string; slug?: string; location?: string; type?: string; mood?: string; short_description?: string; description?: string; image_base64?: string; amenities?: string[]; price_from?: number; capacity?: number; display_order: number; is_active: boolean; is_featured: boolean; published_at?: string; created_at: string; updated_at: string };
@@ -263,7 +265,7 @@ export async function getAdminItineraries() {
 export async function getAdminItinerary(id: number) {
   return fetchAuth<{ itinerary: Itinerary }>(`/api/admin/itineraries/${id}`);
 }
-export async function createAdminItinerary(data: Partial<Itinerary> & { title: string; duration_days: number }) {
+export async function createAdminItinerary(data: CreateItineraryInput) {
   return fetchAuth<{ itinerary: Itinerary }>("/api/admin/itineraries", { method: "POST", body: JSON.stringify(data) });
 }
 export async function updateAdminItinerary(id: number, data: Partial<Itinerary>) {
