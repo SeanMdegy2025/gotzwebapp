@@ -101,6 +101,7 @@ export type Destination = {
   tag?: string;
   description?: string;
   image_base64?: string;
+  images?: string[];
 };
 export type Lodge = {
   id: number;
@@ -159,6 +160,15 @@ export async function getDestinations(): Promise<Destination[]> {
 
 export async function getLodges(): Promise<Lodge[]> {
   return getData<Lodge>("/api/lodges");
+}
+
+export async function getLodge(slug: string): Promise<Lodge | null> {
+  try {
+    const data = await fetchApi<{ data?: Lodge }>(`/api/lodges/${slug}`);
+    return (data as { data?: Lodge }).data ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getContactChannels(): Promise<ContactChannel[]> {

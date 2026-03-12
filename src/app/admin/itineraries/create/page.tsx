@@ -15,6 +15,7 @@ export default function AdminItinerariesCreatePage() {
     badge: "",
     slug: "",
     image_base64: null as string | null,
+    images: [] as Array<{ image_base64: string }>,
     duration_days: 7,
     price_from: "" as string | number,
     difficulty: "",
@@ -50,6 +51,33 @@ export default function AdminItinerariesCreatePage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const addGalleryImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const base64 = ev.target?.result as string;
+        setForm((f) => ({ ...f, images: [...f.images, { image_base64: base64 }] }));
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = "";
+  };
+
+  const removeGalleryImage = (idx: number) => {
+    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
+  };
+
+  const moveGalleryImage = (idx: number, dir: -1 | 1) => {
+    const next = idx + dir;
+    if (next < 0 || next >= form.images.length) return;
+    setForm((f) => {
+      const arr = [...f.images];
+      [arr[idx], arr[next]] = [arr[next], arr[idx]];
+      return { ...f, images: arr };
+    });
   };
 
   const addDay = () => {
@@ -97,6 +125,7 @@ export default function AdminItinerariesCreatePage() {
       badge: form.badge || undefined,
       slug: form.slug || undefined,
       image_base64: form.image_base64 ?? undefined,
+      images: form.images,
       duration_days: form.duration_days,
       price_from: form.price_from ? Number(form.price_from) : undefined,
       difficulty: form.difficulty || undefined,
@@ -160,6 +189,27 @@ export default function AdminItinerariesCreatePage() {
                     className="mt-4 h-48 w-full rounded-lg border border-gray-200 object-cover"
                   />
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Gallery images</label>
+                <p className="mt-1 text-xs text-gray-500">Extra images for the safari detail page. Order: first = left.</p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {form.images.map((img, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={img.image_base64} alt="" className="h-24 w-28 rounded-lg border border-gray-200 object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center gap-1 rounded-lg bg-black/50 opacity-0 transition group-hover:opacity-100">
+                        <button type="button" onClick={() => moveGalleryImage(idx, -1)} disabled={idx === 0} className="rounded bg-white/90 p-1.5 text-gray-800 disabled:opacity-40" title="Move left">←</button>
+                        <button type="button" onClick={() => removeGalleryImage(idx)} className="rounded bg-red-500 p-1.5 text-white" title="Remove">×</button>
+                        <button type="button" onClick={() => moveGalleryImage(idx, 1)} disabled={idx === form.images.length - 1} className="rounded bg-white/90 p-1.5 text-gray-800 disabled:opacity-40" title="Move right">→</button>
+                      </div>
+                    </div>
+                  ))}
+                  <label className="flex h-24 w-28 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-xs text-gray-500 hover:border-safari-green hover:bg-safari-green/5">
+                    <span className="font-medium">+ Add</span>
+                    <input type="file" accept="image/*" onChange={addGalleryImage} className="hidden" />
+                  </label>
+                </div>
               </div>
 
               <div>

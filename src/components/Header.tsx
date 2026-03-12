@@ -10,7 +10,6 @@ const navItems = [
   { href: "/#about", label: "About" },
   { href: "/#destinations", label: "Destinations" },
   { href: "/itineraries", label: "Safaris" },
-  { href: "/tour-packages", label: "Packages" },
   { href: "/#lodges", label: "Lodges" },
   { href: "/#contact", label: "Contact" },
 ];

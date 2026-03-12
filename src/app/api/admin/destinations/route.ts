@@ -3,7 +3,7 @@ import { isAdminAuthenticated } from "@/lib/auth-server";
 import { hasDb } from "@/lib/db/client";
 import { adminListDestinations, adminCreateDestination } from "@/lib/db/queries";
 
-function mapDestination(r: Record<string, unknown>) {
+function mapDestination(r: Record<string, unknown>, images?: Array<{ image_base64: string }>) {
   return {
     id: Number(r.id),
     name: String(r.name),
@@ -19,6 +19,7 @@ function mapDestination(r: Record<string, unknown>) {
     published_at: undefined as string | undefined,
     created_at: String(r.created_at),
     updated_at: String(r.updated_at),
+    images: images ?? [],
   };
 }
 

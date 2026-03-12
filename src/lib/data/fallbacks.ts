@@ -39,7 +39,11 @@ export const fallbackDestinations = [] as Array<{
   description?: string;
   image_base64?: string;
 }>;
-export const fallbackLodges = [] as Array<{
+export const fallbackLodges = [
+  { id: 1, name: "Four Seasons Safari Lodge", slug: "four-seasons-safari-lodge", location: "Serengeti Plains", type: "Lodge", mood: "Luxury", short_description: "Waterhole-facing infinity pools & spa sanctuaries in the savannah canopy.", image_base64: undefined as string | undefined, price_from: null as number | null },
+  { id: 2, name: "Gibb's Farm Manor House", slug: "gibbs-farm-manor-house", location: "Ngorongoro Highlands", type: "Lodge", mood: "Boutique", short_description: "Artist cottages, organic farm-to-table dining, and valley views wrapped in coffee estates.", image_base64: undefined, price_from: null },
+  { id: 3, name: "The Residence Zanzibar", slug: "the-residence-zanzibar", location: "Kizimkazi Peninsula", type: "Villa", mood: "Luxury", short_description: "Private pool villas, butler-led service, and azure lagoons inspired by Swahili heritage.", image_base64: undefined, price_from: null },
+] as Array<{
   id: number;
   name: string;
   slug: string;

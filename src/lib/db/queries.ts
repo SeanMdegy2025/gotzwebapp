@@ -382,6 +382,34 @@ export async function getDestinations(): Promise<Array<{ id: number; name: strin
   }));
 }
 
+export async function getDestinationImages(destinationId: number): Promise<Array<{ id: number; image_base64: string; display_order: number }>> {
+  const sql = getDb();
+  if (!sql) return [];
+  try {
+    const rows = await sql`
+      SELECT id, image_base64, display_order FROM destination_images WHERE destination_id = ${destinationId} ORDER BY display_order ASC, id ASC
+    `;
+    return ((Array.isArray(rows) ? rows : []) as Array<Record<string, unknown>>).map((r) => ({
+      id: Number(r.id),
+      image_base64: r.image_base64 != null ? String(r.image_base64) : "",
+      display_order: Number(r.display_order ?? 0),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Destinations with images[] for public/front. Card image = images[0] or destination.image_base64. */
+export async function getDestinationsWithImages(): Promise<Array<{ id: number; name: string; slug: string; region?: string; teaser?: string; tag?: string; description?: string; image_base64?: string; images: string[] }>> {
+  const list = await getDestinations();
+  if (list.length === 0) return [];
+  const imageLists = await Promise.all(list.map((d) => getDestinationImages(d.id)));
+  return list.map((d, i) => ({
+    ...d,
+    images: (imageLists[i] ?? []).map((img) => img.image_base64).filter(Boolean),
+  }));
+}
+
 export async function getLodges(): Promise<Array<{ id: number; name: string; slug: string; location?: string; type?: string; mood?: string; short_description?: string; image_base64?: string; price_from?: number | null }>> {
   const sql = getDb();
   if (!sql) return [];
@@ -472,6 +500,7 @@ export type ItineraryDetailRow = {
   image_base64?: string;
   duration_days?: number;
   price_from?: number | null;
+  difficulty?: string;
   description?: string;
   highlights?: string[];
   inclusions?: string[];
@@ -490,6 +519,7 @@ function mapItineraryRow(r: Record<string, unknown>): ItineraryDetailRow {
     image_base64: r.image_base64 != null ? String(r.image_base64) : undefined,
     duration_days: r.duration_days != null ? Number(r.duration_days) : undefined,
     price_from: r.price_from != null ? Number(r.price_from) : null,
+    difficulty: r.difficulty != null ? String(r.difficulty) : undefined,
     description: r.description != null ? String(r.description) : undefined,
     highlights: parseJson(r.highlights) as string[] | undefined,
     inclusions: parseJson(r.inclusions) as string[] | undefined,
@@ -503,7 +533,7 @@ export async function getItineraryBySlug(slug: string): Promise<ItineraryDetailR
   if (!sql) return null;
   try {
     const rows = await sql`
-      SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from, description, highlights, inclusions, exclusions, days
+      SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from, difficulty, description, highlights, inclusions, exclusions, days
       FROM itineraries WHERE slug = ${slug} AND deleted_at IS NULL
     `;
     const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
@@ -512,7 +542,7 @@ export async function getItineraryBySlug(slug: string): Promise<ItineraryDetailR
   } catch {
     try {
       const rows = await sql`
-        SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from
+        SELECT id, slug, title, summary, badge, image_base64, duration_days, price_from, difficulty
         FROM itineraries WHERE slug = ${slug} AND deleted_at IS NULL
       `;
       const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
@@ -541,11 +571,11 @@ export async function getItineraryImages(itineraryId: number): Promise<Array<{ i
   }
 }
 
-export async function getLodgeBySlug(slug: string): Promise<{ id: number; name: string; slug: string; location?: string; mood?: string; short_description?: string; image_base64?: string; price_from?: number | null } | null> {
+export async function getLodgeBySlug(slug: string): Promise<{ id: number; name: string; slug: string; location?: string; type?: string; mood?: string; short_description?: string; image_base64?: string; price_from?: number | null } | null> {
   const sql = getDb();
   if (!sql) return null;
   const rows = await sql`
-    SELECT id, name, slug, location, mood, short_description, image_base64, price_from
+    SELECT id, name, slug, location, type, mood, short_description, image_base64, price_from
     FROM lodges WHERE slug = ${slug} AND deleted_at IS NULL
   `;
   const row = Array.isArray(rows) ? rows[0] : (rows as unknown as Record<string, unknown>[])?.[0];
@@ -556,6 +586,7 @@ export async function getLodgeBySlug(slug: string): Promise<{ id: number; name: 
     name: String(r.name),
     slug: String(r.slug),
     location: r.location != null ? String(r.location) : undefined,
+    type: r.type != null ? String(r.type) : undefined,
     mood: r.mood != null ? String(r.mood) : undefined,
     short_description: r.short_description != null ? String(r.short_description) : undefined,
     image_base64: r.image_base64 != null ? String(r.image_base64) : undefined,
@@ -1104,7 +1135,21 @@ export async function adminCreateDestination(data: Record<string, unknown>): Pro
     RETURNING id
   `;
   const row = one<{ id: number }>(rows);
-  return row ? { id: Number(row.id) } : null;
+  if (!row) return null;
+  const destId = Number(row.id);
+  const images = Array.isArray(data.images) ? data.images as Array<{ image_base64?: string }> : [];
+  if (images.length > 0) {
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      if (img && img.image_base64) {
+        await sql`
+          INSERT INTO destination_images (destination_id, image_base64, display_order)
+          VALUES (${destId}, ${String(img.image_base64)}, ${i})
+        `;
+      }
+    }
+  }
+  return { id: destId };
 }
 
 export async function adminUpdateDestination(id: number, data: Record<string, unknown>): Promise<boolean> {
@@ -1122,12 +1167,26 @@ export async function adminUpdateDestination(id: number, data: Record<string, un
     else if (k === "is_active") vals.push(Boolean(data[k]));
     else vals.push(data[k] != null ? String(data[k]) : null);
   }
-  if (updates.length === 0) return true;
-  vals.push(id);
-  await (sql as (q: string, p?: unknown[]) => Promise<unknown>)(
-    `UPDATE destinations SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $${i + 1} AND deleted_at IS NULL`,
-    vals
-  );
+  if (updates.length > 0) {
+    vals.push(id);
+    await (sql as (q: string, p?: unknown[]) => Promise<unknown>)(
+      `UPDATE destinations SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $${i + 1} AND deleted_at IS NULL`,
+      vals
+    );
+  }
+  if (Array.isArray(data.images)) {
+    await sql`DELETE FROM destination_images WHERE destination_id = ${id}`;
+    const images = data.images as Array<{ image_base64?: string }>;
+    for (let j = 0; j < images.length; j++) {
+      const img = images[j];
+      if (img && img.image_base64) {
+        await sql`
+          INSERT INTO destination_images (destination_id, image_base64, display_order)
+          VALUES (${id}, ${String(img.image_base64)}, ${j})
+        `;
+      }
+    }
+  }
   return true;
 }
 

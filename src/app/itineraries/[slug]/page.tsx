@@ -38,6 +38,7 @@ export default async function SafariDetailPage({
   const meta = [
     itinerary.duration_days ? `${itinerary.duration_days} days` : null,
     itinerary.badge,
+    itinerary.difficulty,
   ]
     .filter(Boolean)
     .join(" · ") || "Safari";
@@ -81,7 +82,7 @@ export default async function SafariDetailPage({
         </div>
 
         <div className="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
-          {allImageSrcs.length > 1 && (
+          {allImageSrcs.length > 0 && (
             <div className="mb-12">
               <h2 className="text-lg font-heading font-semibold text-charcoal mb-4">Gallery</h2>
               <SafariGallery images={allImageSrcs} title={itinerary.title} />

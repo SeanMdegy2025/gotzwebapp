@@ -4,6 +4,7 @@ import { hasDb } from "@/lib/db/client";
 import {
   adminListItineraries,
   adminCreateItinerary,
+  adminSetItineraryImages,
 } from "@/lib/db/queries";
 
 function mapItinerary(r: Record<string, unknown>) {
@@ -52,6 +53,10 @@ export async function POST(request: NextRequest) {
   const idResult = await adminCreateItinerary(body);
   if (!idResult) {
     return NextResponse.json({ message: "Failed to create" }, { status: 500 });
+  }
+  const imagesPayload = Array.isArray((body as { images?: unknown }).images) ? (body as { images: Array<{ image_base64: string }> }).images : undefined;
+  if (imagesPayload && imagesPayload.length > 0) {
+    await adminSetItineraryImages(idResult.id, imagesPayload);
   }
   const itinerary = mapItinerary({ ...body, id: idResult.id, slug: body.slug || (String(body.title).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")), display_order: body.display_order ?? 0, is_active: body.is_active !== false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
   return NextResponse.json({ itinerary: { ...itinerary, id: idResult.id } });

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth-server";
 import { hasDb } from "@/lib/db/client";
-import { adminGetDestination, adminUpdateDestination, adminDeleteDestination } from "@/lib/db/queries";
+import { adminGetDestination, adminUpdateDestination, adminDeleteDestination, getDestinationImages } from "@/lib/db/queries";
 
-function mapDestination(r: Record<string, unknown>) {
+function mapDestination(r: Record<string, unknown>, images?: Array<{ image_base64: string }>) {
   return {
     id: Number(r.id),
     name: String(r.name),
@@ -19,6 +19,7 @@ function mapDestination(r: Record<string, unknown>) {
     published_at: undefined as string | undefined,
     created_at: String(r.created_at),
     updated_at: String(r.updated_at),
+    images: images ?? [],
   };
 }
 
@@ -29,7 +30,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!hasDb()) return NextResponse.json({ message: "Not found" }, { status: 404 });
   const row = await adminGetDestination(id);
   if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
-  return NextResponse.json({ destination: mapDestination(row) });
+  const images = await getDestinationImages(id);
+  return NextResponse.json({ destination: mapDestination(row, images) });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,7 +43,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   await adminUpdateDestination(id, body);
   const row = await adminGetDestination(id);
   if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
-  return NextResponse.json({ destination: mapDestination(row) });
+  const images = await getDestinationImages(id);
+  return NextResponse.json({ destination: mapDestination(row, images) });
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

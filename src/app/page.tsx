@@ -4,19 +4,21 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { ContactForm } from "@/components/ContactForm";
 import { FeatureSection } from "@/components/FeatureSection";
 import { BackToTop } from "@/components/BackToTop";
+import { DestinationsSection } from "@/components/DestinationsSection";
+import { LodgesSection } from "@/components/LodgesSection";
 import { LinkWithLoading } from "@/components/LinkWithLoading";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { SectionDivider, SectionDividerMuted } from "@/components/SectionDivider";
 import { toImageSrc } from "@/lib/api";
+import { fallbackLodges } from "@/lib/data/fallbacks";
 import {
   getAboutStats,
   getAboutHighlights,
   getContactChannels,
   getContactQuickFacts,
-  getDestinations,
+  getDestinationsWithImages,
   getItineraries,
   getLodges,
-  getTourPackages,
 } from "@/lib/db/queries";
 
 /** Revalidate so admin changes (e.g. Contact Channels) show on the frontend without redeploy. */
@@ -57,22 +59,21 @@ const FALLBACK_QUICK_FACTS = [
 export default async function Home() {
   let aboutStats = FALLBACK_STATS;
   let aboutHighlights = FALLBACK_HIGHLIGHTS;
-  let safariItems: Array<{ slug: string; title: string; summary?: string; meta: string; image: string; linkTo: "itinerary" | "tour-package" }> = [];
+  let safariItems: Array<{ slug: string; title: string; summary?: string; meta: string; image: string }> = [];
   let destinationSpots = FALLBACK_DESTINATIONS;
-  let signatureLodges: Array<{ name: string; location: string; image: string; mood: string }> = [];
+  let signatureLodges: Array<{ name: string; location: string; image: string; mood: string; slug: string; type?: string; short_description?: string; price_from?: number | null }> = [];
   let contactChannels: Array<{ label: string; value: string; detail?: string }> = FALLBACK_CHANNELS;
   let contactQuickFacts = FALLBACK_QUICK_FACTS;
 
   try {
-    const [stats, highlights, itineraries, destinations, lodges, channels, quickFacts, tourPackages] = await Promise.all([
+    const [stats, highlights, itineraries, destinations, lodges, channels, quickFacts] = await Promise.all([
       getAboutStats(),
       getAboutHighlights(),
       getItineraries(),
-      getDestinations(),
+      getDestinationsWithImages(),
       getLodges(),
       getContactChannels(),
       getContactQuickFacts(),
-      getTourPackages(50),
     ]);
     if (stats.length > 0) aboutStats = stats;
     if (highlights.length > 0) aboutHighlights = highlights;
@@ -86,36 +87,30 @@ export default async function Home() {
         summary: i.summary ?? undefined,
         meta: [i.duration_days ? `${i.duration_days} days` : null, i.badge].filter(Boolean).join(" · ") || "Safari",
         image: toImageSrc(i.image_base64) ?? "/images/safari/wildlife-zebra.jpg",
-        linkTo: "itinerary" as const,
       }));
-    } else if (tourPackages.length > 0) {
-      safariItems = tourPackages.slice(0, 6).map((p) => {
-        const hero = p.hero_image as { cover?: string; url?: string } | null | undefined;
-        const img = hero?.cover || hero?.url || (p.images?.[0] as string) || "/images/safari/wildlife-zebra.jpg";
-        return {
-          slug: p.slug,
-          title: p.title,
-          summary: p.short_description ?? undefined,
-          meta: [p.duration_days ? `${p.duration_days} days` : null].filter(Boolean).join(" · ") || "Package",
-          image: img,
-          linkTo: "tour-package" as const,
-        };
-      });
     } else {
       safariItems = [
-        { slug: "great-migration-serengeti", title: "Great Migration Serengeti Safari", summary: "Witness river crossings and endless savannah herds with private guides.", meta: "7 days · Serengeti & Grumeti", image: "/images/safari/wildlife-zebra.jpg", linkTo: "tour-package" },
-        { slug: "kilimanjaro-machame", title: "Kilimanjaro Machame Summit Trek", summary: "Small-group climbs with acclimatisation camps and expert mountain crew.", meta: "8 days · Machame Route", image: "/images/safari/wildlife-giraffe.jpg", linkTo: "tour-package" },
-        { slug: "zanzibar-spice-beach", title: "Zanzibar Spice & Beach Escape", summary: "Boutique Stone Town stays paired with barefoot luxury on Nungwi sands.", meta: "5 days · Zanzibar Archipelago", image: "/images/safari/beach-1.jpg", linkTo: "tour-package" },
+        { slug: "serengeti-great-migration-safari", title: "Serengeti Great Migration Safari", summary: "Witness river crossings and endless savannah herds with private guides.", meta: "7 days · Best Seller", image: "/images/safari/wildlife-zebra.jpg" },
+        { slug: "cultural-coastal-heritage", title: "Cultural & Coastal Heritage", summary: "Zanzibar culture, spice farms, coral reefs and UNESCO Stone Town.", meta: "7 days · Best experience", image: "/images/safari/wildlife-giraffe.jpg" },
+        { slug: "zanzibar-spice-beach", title: "Zanzibar Spice & Beach Escape", summary: "Boutique Stone Town stays paired with barefoot luxury on Nungwi sands.", meta: "5 days · Zanzibar Archipelago", image: "/images/safari/beach-1.jpg" },
       ];
     }
 
     if (destinations.length > 0) {
-      destinationSpots = destinations.map((d) => ({
-        name: d.name,
-        tag: d.tag || d.region || "",
-        image: toImageSrc(d.image_base64) ?? "/images/safari/wildlife-herd.jpg",
-        description: d.description || d.teaser || "",
-      }));
+      destinationSpots = destinations.map((d) => {
+        const imageUrls = (d.images ?? [])
+          .map((b) => toImageSrc(b))
+          .filter((s): s is string => s != null);
+        const cardImage = imageUrls[0] ?? toImageSrc(d.image_base64) ?? "/images/safari/wildlife-herd.jpg";
+        const allImages = imageUrls.length > 0 ? imageUrls : (toImageSrc(d.image_base64) ? [toImageSrc(d.image_base64)!] : ["/images/safari/wildlife-herd.jpg"]);
+        return {
+          name: d.name,
+          tag: d.tag || d.region || "",
+          image: cardImage,
+          images: allImages,
+          description: d.description || d.teaser || "",
+        };
+      });
     }
 
     if (lodges.length > 0) {
@@ -123,26 +118,44 @@ export default async function Home() {
         name: l.name,
         location: l.location || "",
         image: toImageSrc(l.image_base64) ?? "/images/safari/lodge-1.jpg",
-        mood: l.short_description || l.mood || "",
+        mood: l.mood || "",
+        slug: l.slug,
+        type: l.type,
+        short_description: l.short_description,
+        price_from: l.price_from ?? null,
       }));
     } else {
-      signatureLodges = [
-        { name: "Four Seasons Safari Lodge", location: "Serengeti Plains", image: "/images/safari/lodge-1.jpg", mood: "Waterhole-facing infinity pools & spa sanctuaries in the savannah canopy." },
-        { name: "Gibb's Farm Manor House", location: "Ngorongoro Highlands", image: "/images/safari/lodge-2.jpg", mood: "Artist cottages, organic farm-to-table dining, and valley views wrapped in coffee estates." },
-        { name: "The Residence Zanzibar", location: "Kizimkazi Peninsula", image: "/images/safari/beach-3.jpg", mood: "Private pool villas, butler-led service, and azure lagoons inspired by Swahili heritage." },
-      ];
+      const placeholders = ["/images/safari/lodge-1.jpg", "/images/safari/lodge-2.jpg", "/images/safari/beach-3.jpg"];
+      signatureLodges = fallbackLodges.slice(0, 6).map((l, i) => ({
+        name: l.name,
+        location: l.location || "",
+        image: toImageSrc(l.image_base64) ?? placeholders[i % placeholders.length] ?? "/images/safari/lodge-1.jpg",
+        mood: l.short_description || l.mood || "",
+        slug: l.slug,
+        type: l.type,
+        short_description: l.short_description,
+        price_from: l.price_from ?? null,
+      }));
     }
   } catch {
     safariItems = [
-      { slug: "great-migration-serengeti", title: "Great Migration Serengeti Safari", summary: "Witness river crossings and endless savannah herds with private guides.", meta: "7 days · Serengeti & Grumeti", image: "/images/safari/wildlife-zebra.jpg", linkTo: "tour-package" },
-      { slug: "kilimanjaro-machame", title: "Kilimanjaro Machame Summit Trek", summary: "Small-group climbs with acclimatisation camps and expert mountain crew.", meta: "8 days · Machame Route", image: "/images/safari/wildlife-giraffe.jpg", linkTo: "tour-package" },
-      { slug: "zanzibar-spice-beach", title: "Zanzibar Spice & Beach Escape", summary: "Boutique Stone Town stays paired with barefoot luxury on Nungwi sands.", meta: "5 days · Zanzibar Archipelago", image: "/images/safari/beach-1.jpg", linkTo: "tour-package" },
+      { slug: "serengeti-great-migration-safari", title: "Serengeti Great Migration Safari", summary: "Witness river crossings and endless savannah herds with private guides.", meta: "7 days · Serengeti & Grumeti", image: "/images/safari/wildlife-zebra.jpg" },
+      { slug: "cultural-coastal-heritage", title: "Cultural & Coastal Heritage", summary: "Zanzibar culture, spice farms, coral reefs and UNESCO Stone Town.", meta: "7 days · Best experience", image: "/images/safari/wildlife-giraffe.jpg" },
+      { slug: "zanzibar-spice-beach", title: "Zanzibar Spice & Beach Escape", summary: "Boutique Stone Town stays paired with barefoot luxury on Nungwi sands.", meta: "5 days · Zanzibar Archipelago", image: "/images/safari/beach-1.jpg" },
     ];
-    signatureLodges = [
-      { name: "Four Seasons Safari Lodge", location: "Serengeti Plains", image: "/images/safari/lodge-1.jpg", mood: "Waterhole-facing infinity pools & spa sanctuaries in the savannah canopy." },
-      { name: "Gibb's Farm Manor House", location: "Ngorongoro Highlands", image: "/images/safari/lodge-2.jpg", mood: "Artist cottages, organic farm-to-table dining, and valley views wrapped in coffee estates." },
-      { name: "The Residence Zanzibar", location: "Kizimkazi Peninsula", image: "/images/safari/beach-3.jpg", mood: "Private pool villas, butler-led service, and azure lagoons inspired by Swahili heritage." },
-    ];
+    signatureLodges = fallbackLodges.slice(0, 6).map((l, i) => {
+      const placeholders = ["/images/safari/lodge-1.jpg", "/images/safari/lodge-2.jpg", "/images/safari/beach-3.jpg"];
+      return {
+        name: l.name,
+        location: l.location || "",
+        image: toImageSrc(l.image_base64) ?? placeholders[i % placeholders.length] ?? "/images/safari/lodge-1.jpg",
+        mood: l.short_description || l.mood || "",
+        slug: l.slug,
+        type: l.type,
+        short_description: l.short_description,
+        price_from: l.price_from ?? null,
+      };
+    });
   }
 
   return (
@@ -225,7 +238,7 @@ export default async function Home() {
           </ScrollReveal>
         </section>
 
-        {/* Packages - safari green */}
+        {/* Safaris / Itineraries */}
         <section id="safaris" className="relative overflow-hidden bg-gradient-to-b from-safari-green via-safari-green-dark to-safari-green py-20 sm:py-28 lg:py-32 text-white">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.2) 1px, transparent 0)", backgroundSize: "50px 50px" }} />
@@ -235,7 +248,7 @@ export default async function Home() {
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-12 sm:mb-16 lg:mb-20 text-center">
               <span className="inline-block rounded-full border-2 border-safari-gold/50 bg-safari-gold/10 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-safari-gold mb-4 sm:mb-6">
-                Safaris and Itineraries
+                Safaris
               </span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-white leading-tight lg:text-6xl xl:text-7xl text-balance mx-auto max-w-4xl border-b-2 border-safari-gold/40 pb-4 sm:pb-6 mb-4 sm:mb-6">
                 Preview a few of our most-requested{" "}
@@ -261,7 +274,7 @@ export default async function Home() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                     <div className="absolute left-4 top-4 sm:left-6 sm:top-6 z-10">
                       <span className="inline-flex items-center rounded-full bg-safari-gold px-3 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-charcoal shadow-glow-gold backdrop-blur-sm">
-                        Package
+                        Safari
                       </span>
                     </div>
                     <div className="absolute inset-x-4 bottom-4 sm:inset-x-6 sm:bottom-6">
@@ -273,7 +286,7 @@ export default async function Home() {
                     <p className="text-sm leading-relaxed text-white/75 line-clamp-3">{pkg.summary}</p>
                     <div className="mt-auto pt-6 border-t border-white/10">
                       <LinkWithLoading
-                        href={pkg.linkTo === "itinerary" ? `/itineraries/${pkg.slug}` : `/tour-packages/${pkg.slug}`}
+                        href={`/itineraries/${pkg.slug}`}
                         className="group flex items-center justify-center rounded-full border-2 border-white/40 bg-white/5 backdrop-blur-sm px-5 py-3 sm:px-6 sm:py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-safari-green min-h-[44px]"
                         loadingLabel="Opening…"
                       >
@@ -289,12 +302,12 @@ export default async function Home() {
             </div>
             <div className="text-center">
               <LinkWithLoading
-                href={safariItems[0]?.linkTo === "itinerary" ? "/itineraries" : "/tour-packages"}
+                href="/itineraries"
                 className="group relative overflow-hidden inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-safari-gold via-safari-gold/95 to-orange-500 px-6 py-4 sm:px-10 sm:py-5 text-sm sm:text-base font-bold text-charcoal shadow-lg transition-all duration-300 hover:from-safari-gold-light hover:via-safari-gold hover:to-orange-400 hover:shadow-2xl hover:shadow-safari-gold/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-safari-gold focus:ring-offset-2 focus:ring-offset-safari-green min-h-[48px]"
                 loadingLabel="Loading…"
               >
                 <span className="relative z-10 flex items-center">
-                  {safariItems[0]?.linkTo === "itinerary" ? "View All Itineraries" : "View All Packages"}
+                  View All Safaris
                   <svg className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -343,35 +356,7 @@ export default async function Home() {
                 </Link>
               </div>
             </div>
-            <div className="grid gap-5 sm:gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-6">
-              {destinationSpots.map((spot, index) => (
-                <article
-                  key={spot.name ? `dest-${spot.name}-${index}` : `dest-${index}`}
-                  className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-large transition-all duration-500 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] hover:-translate-y-2 card-shine min-h-[280px] sm:min-h-[320px] ${
-                    index === 0 ? "md:col-span-2 min-h-[320px] sm:min-h-[380px] lg:col-span-3 lg:row-span-2 lg:min-h-[480px]" : "lg:col-span-3 lg:min-h-[320px]"
-                  }`}
-                >
-                  <div className="absolute inset-0">
-                    <img
-                      src={typeof spot.image === "string" ? spot.image : "/images/safari/wildlife-herd.jpg"}
-                      alt={spot.name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-[700ms] ease-out group-hover:scale-110"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
-                  <div className="absolute inset-x-0 bottom-0 space-y-2 sm:space-y-4 p-4 sm:p-6 md:p-8 text-white">
-                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-safari-gold">{spot.tag}</p>
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold leading-tight">{spot.name}</h3>
-                    <p className="max-w-lg text-sm sm:text-base leading-relaxed text-white/90 line-clamp-2 sm:line-clamp-none">{spot.description}</p>
-                    <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
-                      <span className="rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-white/90">Sample Itinerary</span>
-                      <span className="rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-white/90">Best Season</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <DestinationsSection spots={destinationSpots} />
           </div>
           </ScrollReveal>
         </section>
@@ -399,34 +384,7 @@ export default async function Home() {
                 </span>
               </Link>
             </div>
-            <div className="grid gap-5 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {signatureLodges.map((lodge, index) => (
-                  <article key={lodge.name ? `lodge-${lodge.name}-${index}` : `lodge-${index}`} className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-safari-sand/30 bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-safari-gold/50 card-shine">
-                    <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-safari-gold/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="relative h-56 sm:h-64 overflow-hidden">
-                      <img
-                        src={lodge.image}
-                        alt={lodge.name}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-[700ms] ease-out group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                      <div className="absolute left-5 sm:left-6 top-5 sm:top-6 rounded-full bg-white/90 backdrop-blur-sm border border-white/30 px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-[0.3em] text-charcoal shadow-md">
-                        {lodge.location}
-                      </div>
-                    </div>
-                    <div className="relative flex flex-col gap-4 sm:gap-5 p-6 sm:p-8">
-                      <h3 className="text-xl sm:text-2xl font-heading font-bold text-charcoal transition-transform duration-300 group-hover:scale-105">{lodge.name}</h3>
-                      <p className="text-sm sm:text-base leading-relaxed text-charcoal/75">{lodge.mood}</p>
-                      <div className="mt-auto flex items-center justify-between pt-5 sm:pt-6 border-t border-safari-sand/40 text-sm font-bold uppercase tracking-[0.3em] text-safari-gold">
-                        <span>Inquire</span>
-                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-0 bg-gradient-to-r from-safari-gold to-safari-green transition-all duration-500 group-hover:w-3/4 rounded-full" />
-                  </article>
-                ))}
-            </div>
+            <LodgesSection lodges={signatureLodges} />
           </div>
           </ScrollReveal>
         </section>
